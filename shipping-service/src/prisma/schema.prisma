@@ -1,0 +1,86 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model brands {
+  brand_id Int        @id @default(autoincrement())
+  name     String     @db.VarChar(255)
+  rating   Decimal?   @db.Decimal(3, 2)
+  products products[]
+}
+
+model categories {
+  category_id Int        @id @default(autoincrement())
+  name        String     @db.VarChar(255)
+  description String?
+  products    products[]
+}
+
+model comment {
+  comment_id    Int       @id @default(autoincrement())
+  context       String?
+  start_comment Int?
+  user_id       Int?
+  product_id    Int?
+  create_at     DateTime? @default(now()) @db.Timestamptz(6)
+  products      products? @relation(fields: [product_id], references: [product_id], onDelete: NoAction, onUpdate: NoAction)
+  users         users?    @relation(fields: [user_id], references: [user_id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model coupons {
+  coupon_id       Int       @id @default(autoincrement())
+  code            String    @unique @db.VarChar(50)
+  discount_amount Decimal   @db.Decimal(10, 2)
+  expiry_date     DateTime? @db.Timestamp(6)
+}
+
+model orders {
+  order_id     Int       @id @default(autoincrement())
+  user_id      Int?
+  order_total  Decimal   @db.Decimal(10, 2)
+  order_status String?   @default("Pending") @db.VarChar(50)
+  created_at   DateTime? @default(now()) @db.Timestamp(6)
+  updated_at   DateTime? @default(now()) @db.Timestamp(6)
+  users        users?    @relation(fields: [user_id], references: [user_id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model products {
+  product_id     Int         @id @default(autoincrement())
+  name           String      @db.VarChar(255)
+  description    String?
+  price          Decimal     @db.Decimal(10, 2)
+  discount_price Decimal?    @db.Decimal(10, 2)
+  category_id    Int?
+  brand_id       Int?
+  stock          Int?        @default(0)
+  created_at     DateTime?   @default(now()) @db.Timestamp(6)
+  updated_at     DateTime?   @default(now()) @db.Timestamp(6)
+  comment        comment[]
+  brands         brands?     @relation(fields: [brand_id], references: [brand_id], onDelete: NoAction, onUpdate: NoAction)
+  categories     categories? @relation(fields: [category_id], references: [category_id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model shipping {
+  shipping_id             Int       @id @default(autoincrement())
+  destination             String    @db.VarChar(255)
+  delivery_fee            Decimal   @db.Decimal(10, 2)
+  estimated_delivery_date DateTime? @db.Timestamp(6)
+}
+
+model users {
+  user_id      Int       @id @default(autoincrement())
+  full_name    String
+  email        String    @unique
+  phone_number String?   @db.VarChar(11)
+  address      String?
+  password     String
+  create_at    DateTime? @default(now()) @db.Timestamptz(6)
+  is_remove    Boolean?  @default(false)
+  comment      comment[]
+  orders       orders[]
+}
